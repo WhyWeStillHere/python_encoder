@@ -5,13 +5,15 @@ ENGLISH_ALPHABET_LEN = 26
 ENGLISH_FIRST_LETTER_CODE = 97
 ENGLISH_FIRST_CAPITAL_LETTER_CODE = 65
 FIRST_VALID_LETTER = 32
+ENGLISH = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+suitable_letter = {}
 
 
 def raw_text_to_text(raw, text):
     new_text = []
     j = 0
     for letter in text:
-        if letter.isalpha():
+        if suitable_letter.get(letter):
             if letter.isupper():
                 new_text += chr(ord(raw[j]) - FIRST_VALID_LETTER)
             else:
@@ -69,7 +71,7 @@ def encode_caesar(key=None, input_file=None, output_file=None):
     inp = get_input(input_file)
     encoded_inp = []
     for letter in inp:
-        if letter.isalpha():
+        if suitable_letter.get(letter):
             if letter.isupper():
                 encoded_inp += chr((ord(letter) - ENGLISH_FIRST_CAPITAL_LETTER_CODE + key)
                                    % ENGLISH_FIRST_CAPITAL_LETTER_CODE + ENGLISH_FIRST_CAPITAL_LETTER_CODE)
@@ -85,7 +87,7 @@ def encode_caesar(key=None, input_file=None, output_file=None):
 
 def encode_vigenere(key=None, input_file=None, output_file=None):
     inp = get_input(input_file)
-    text = [i for i in inp.lower() if i.isalpha()]
+    text = [letter for letter in inp.lower() if suitable_letter.get(letter)]
     num_of_blocks = len(inp) // len(key) + 1
     new_key = (key * num_of_blocks)[:len(text)]
     encoded_inp = []
@@ -137,7 +139,7 @@ def decode_caesar(key=None, input_file=None, output_file=None):
     inp = get_input(input_file)
     encoded_inp = []
     for letter in inp:
-        if letter.isalpha():
+        if suitable_letter.get(letter):
             if letter.isupper():
                 encoded_inp += chr((ord(letter) - ENGLISH_FIRST_CAPITAL_LETTER_CODE - key % ENGLISH_ALPHABET_LEN
                                     + ENGLISH_ALPHABET_LEN) % ENGLISH_ALPHABET_LEN + ENGLISH_FIRST_CAPITAL_LETTER_CODE)
@@ -188,12 +190,12 @@ def train(namespace):
     if model_file is None:
         raise SyntaxError('No file with model')
     text = get_input(input_file)
-    alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    alphabet = ENGLISH
     model = {}
     for i in alphabet:
         model[i] = 0
     for letter in text:
-        if letter.isalpha():
+        if suitable_letter.get(letter):
             model[letter] += 1
     with open(model_file, 'w') as f:
         json.dump(model, f)
@@ -239,11 +241,11 @@ def hack_caesar(model=None, input_file=None, output_file=None, text=None):
     with open(model, 'r') as f:
         model_dict = json.load(f)
     text_dict = {}
-    alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    alphabet = ENGLISH
     for i in alphabet:
         text_dict[i] = 0
     for letter in text:
-        if letter.isalpha():
+        if suitable_letter.get(letter):
             text_dict[letter] += 1
     low_score = float('inf')
     key = -1
@@ -340,6 +342,10 @@ def parse_args(command=None):
     encode_ciphers = ['caesar', 'vigenere', 'vernam']
     decode_ciphers = ['caesar', 'vigenere', 'vernam']
     hack_ciphers = ['caesar', 'vigenere']
+
+    # setting suitable letters
+    for letter in ENGLISH:
+        suitable_letter[letter] = 1
 
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(help='List of commands')
